@@ -1,0 +1,17 @@
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+__pycache__/
+*.py[cod]
+*.db
+.qianji.db
+.qianji_sessions/
+.env
+.venv/
+venv/
+dist/
+build/
+*.egg-info/
+.git/
+.gitignore
+tests/

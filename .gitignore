@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Build artifacts
+/build/
+/dist/
+*.egg-info/
+
+# Runtime data and local sessions
+.qianji.db
+*.db
+/.qianji_sessions/
+/data/
+
+# Category icon cache: prefetched at image build time (scripts/prefetch_icons.py)
+# and grown at runtime next to the database. Build artifacts, not source.
+/qianji/server/static/caticons/
+/caticons/
+
+# Local environment
+.env
+.env.*
+!.env.example
+
+# IDE / OS
+.DS_Store
+.idea/
+.vscode/

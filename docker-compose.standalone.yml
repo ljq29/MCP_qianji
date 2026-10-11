@@ -1,0 +1,12 @@
+# 无 Traefik 的独立部署 override，与基础 docker-compose.yml 叠加使用：
+#
+#   docker compose -f docker-compose.yml -f docker-compose.standalone.yml up -d
+#
+# 效果：把 50003 直接发布到宿主机，并移除外部 traefik 网络与 Traefik labels。
+# 注意：networks/labels 的 !reset 语法需要 Docker Compose v2.24.4 及以上。
+services:
+  qianji-api:
+    ports:
+      - "${QIANJI_PORT:-50003}:50003"
+    networks: !reset []
+    labels: !reset []

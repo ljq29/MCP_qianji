@@ -1,0 +1,70 @@
+services:
+  qianji-data-init:
+    image: mcp_qianji:${QIANJI_IMAGE_TAG:-0.0.30}
+    build: .
+    pull_policy: if_not_present
+    user: "0:0"
+    command: ["sh", "-c", "mkdir -p /app/data && chown -R ${PUID:-1000}:${PGID:-1000} /app/data"]
+    volumes:
+      - qianji-data:/app/data
+    restart: "no"
+
+  qianji-api:
+    image: mcp_qianji:${QIANJI_IMAGE_TAG:-0.0.30}
+    build: .
+    pull_policy: if_not_present
+    container_name: qianji-sdk
+    user: "${PUID:-1000}:${PGID:-1000}"
+    # ports:
+    #   - "${QIANJI_PORT:-50003}:50003"
+    expose:
+      - "50003"
+    depends_on:
+      qianji-data-init:
+        condition: service_completed_successfully
+    volumes:
+      - qianji-data:/app/data
+    environment:
+      QIANJI_DB_PATH: /app/data/.qianji.db
+      QIANJI_HOST: "0.0.0.0"
+      QIANJI_PORT: "50003"
+      QIANJI_MCP_MODE: ${QIANJI_MCP_MODE:-advanced}
+      QIANJI_FILE_RETENTION_DAYS: ${QIANJI_FILE_RETENTION_DAYS:-7}
+      TZ: ${TZ:-Asia/Shanghai}
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      - "traefik.http.services.${AppName:-mcp_qianji}-backend.loadbalancer.server.port=50003"
+      - "traefik.http.services.${AppName:-mcp_qianji}-backend.loadbalancer.server.scheme=http"
+      - "traefik.http.middlewares.${AppName:-mcp_qianji}-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.${AppName:-mcp_qianji}-redirect.redirectscheme.permanent=true"
+      - "traefik.http.routers.${AppName:-mcp_qianji}-web.entrypoints=http"
+      - "traefik.http.routers.${AppName:-mcp_qianji}-web.rule=Host(`${DOMAIN:-qianji.example.com}`)"
+      - "traefik.http.routers.${AppName:-mcp_qianji}-web.middlewares=${AppName:-mcp_qianji}-redirect"
+      - "traefik.http.routers.${AppName:-mcp_qianji}-web.service=${AppName:-mcp_qianji}-backend"
+      - "traefik.http.routers.${AppName:-mcp_qianji}-ssl.entrypoints=https,https8443"
+      - "traefik.http.routers.${AppName:-mcp_qianji}-ssl.rule=Host(`${DOMAIN:-qianji.example.com}`)"
+      - "traefik.http.routers.${AppName:-mcp_qianji}-ssl.tls=true"
+      - "traefik.http.routers.${AppName:-mcp_qianji}-ssl.tls.certresolver=le"
+      - "traefik.http.routers.${AppName:-mcp_qianji}-ssl.middlewares=gzip@file,secure-headers@file"
+      - "traefik.http.routers.${AppName:-mcp_qianji}-ssl.service=${AppName:-mcp_qianji}-backend"
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - python3
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:${QIANJI_PORT:-50003}/healthz', timeout=3).read()"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  qianji-data:
+
+networks:
+  traefik:
+    external: true

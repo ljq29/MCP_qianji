@@ -1,0 +1,87 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "qianji-sdk"
+description = "钱迹记账 API 客户端、HTTP API 和 MCP 服务"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dynamic = ["version"]
+dependencies = [
+    "httpx>=0.27,<1.0",
+    "pydantic>=2.0,<3.0",
+    "fastapi>=0.110,<0.141",
+    "starlette>=0.40,<0.50",
+    "uvicorn>=0.29,<1.0",
+    "mcp[cli]>=1.30,<1.31",
+    "slowapi>=0.1.9,<1.0",
+    "aiosqlite>=0.20,<1.0",
+    "python-multipart>=0.0.9,<1.0",
+    "Pillow>=10,<13",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8",
+]
+dev = [
+    "ruff>=0.8",
+    "mypy>=1.10",
+    "pre-commit>=4.0",
+]
+
+[project.scripts]
+qianji-api = "qianji.cli:run_api"
+qianji-mcp-http = "qianji.cli:run_mcp_http"
+
+[project.urls]
+Repository = "https://github.com/ljq29/MCP_qianji"
+
+[tool.hatch.build.targets.wheel]
+packages = ["qianji"]
+
+[tool.hatch.version]
+path = "qianji/version.py"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+markers = [
+    "integration: tests that call the real Qianji API and require credentials",
+]
+
+[tool.mypy]
+python_version = "3.10"
+warn_unused_configs = true
+disallow_untyped_defs = false
+warn_return_any = false
+
+[[tool.mypy.overrides]]
+module = [
+    "mcp.*",
+    "aiosqlite.*",
+    "slowapi.*",
+    "limits.*",
+]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["qianji.mcp_server"]
+disable_error_code = ["attr-defined", "arg-type", "empty-body"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+"qianji/server/pages.py" = ["E501"]
+"qianji/server/app.py" = ["E501"]
+"qianji/server/routes.py" = ["B008"]
+"qianji/endpoints.py" = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["qianji"]
